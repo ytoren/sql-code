@@ -284,3 +284,5 @@ GROUP BY user_id, user_session_id
 
 
 ## Full SQL code
+
+You can find the full code in [this file](user_sessions.sql)

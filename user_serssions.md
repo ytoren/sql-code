@@ -19,7 +19,7 @@ Which means that aggregating event / ledger data into meaningful sessions is an 
 - Our backend event that track approval of a checkout do not have the token, only the user ID.
 
 
-```
+```sql
 SELECT *
 FROM (VALUES
     (CAST('2021-01-01 09:12:12' AS DATETIME), 1, 'A1', 'pageView A')
@@ -45,7 +45,7 @@ FROM (VALUES
 
 The event ledger (rows come in by timestamp) looks like this:
 
-```
+```sql
 SELECT * FROM events_table
 ```
 
@@ -73,7 +73,7 @@ SELECT * FROM events_table
 
 There's no need to actually sort the data by user & date, but it would help our visualization:
 
-```
+```sql
 SELECT * FROM events_table ORDER BY user_id, timestamp_utc
 ```
 
@@ -102,7 +102,7 @@ SELECT * FROM events_table ORDER BY user_id, timestamp_utc
 
 Rather than defining when a session starts it is easier to define when a session ends. This happens when a checkout is complete or
 
-```
+```sql
 SELECT
   timestamp_utc,
   user_id,
@@ -146,7 +146,7 @@ FROM events_table
 
 We then move the "end of session" market a step forward so we get a "start of next session" indicator
 
-```
+```sql
 WITH end_of_sessions AS (
   SELECT
     timestamp_utc,
@@ -202,7 +202,7 @@ SELECT
 
 And finally, we run a cumulative sum over the indicator, which will give us a per-user session ID, starting with 0
 
-```
+```sql
 WITH end_of_sessions AS (
   SELECT
     timestamp_utc,
@@ -270,13 +270,13 @@ FROM start_of_sessions
 
 And we can continue our analysis by session
 
-```
+```sql
 SELECT
   user_id,
   user_session_id
   SUM(CASE WHEN event_type = 'Approved' THEN 1 ELSE 0 END) AS purchase_count
-  SUM(CASE WHEN event_type = 'Checkout' THEN 1 ELSE 0 END) AS checkout_attempts 
-  COUNT( DISTINCT CASE WHEN event_type LIKE 'pathView%' THEN event_type ELSE NULL END) AS distinct_pageviews_count 
+  SUM(CASE WHEN event_type = 'Checkout' THEN 1 ELSE 0 END) AS checkout_attempts
+  COUNT( DISTINCT CASE WHEN event_type LIKE 'pathView%' THEN event_type ELSE NULL END) AS distinct_pageviews_count
   ...
 FROM sessions
 GROUP BY user_id, user_session_id
@@ -284,4 +284,3 @@ GROUP BY user_id, user_session_id
 
 
 ## Full SQL code
-

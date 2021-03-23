@@ -39,7 +39,7 @@ FROM (VALUES
     (CAST('2021-01-06 21:25:37' AS TIMESTAMP), 'uid001', 'A3', 'Add product C'),
     (CAST('2021-01-06 21:35:47' AS TIMESTAMP), 'uid001', 'A3', 'Checkout'),
     (CAST('2021-01-06 21:33:48' AS TIMESTAMP), 'uid001', NULL, 'Approved'),
-    (CAST('2021-01-06 21:34:08' AS TIMESTAMP), 'uid001', 'A3', 'PageView D')
+    (CAST('2021-01-06 21:34:08' AS TIMESTAMP), 'uid001', 'A3', 'pageView D')
   ) AS t(timestamp_utc, user_id, token, event_type)
 ```
 

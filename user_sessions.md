@@ -1,23 +1,45 @@
 # What's in a session
 
-Good news! Your engineers finally got around to implementing pageView tracking and maybe some custom events (buttons clicked, backend events etc),
-which means it's time to start figuring out what your users are *actually* doing with your product. And while counting tokens & clicks is great place to start, you also want to put things in context - aka "the session".
+Good news! Your engineers finally got around to implementing pageView tracking and maybe some custom events (buttons clicked, backend events like checkout confirmation, etc). It's time to start figuring out what your users are *actually* doing with your product.
 
-A session is a much (ab)used term and
-some tracking tools come with their own baked-in definition
-30 minute timeout
-4-day the cart expires on the backend (but we haven't implemented these events yet)
+## Why sessions
 
-Some events are "absolute" indicators of session end. Other cases require date differences (but date change by itself does not necessarily means a new session)
+Counting tokens & clicks is great place to start (and quite often, all you really need), but you want to dive a bit deeper. KPIs like [total clicks] / [total product paveViews] are good overall metrics, but will not tell you that 90% of your users always click while 10% of your users just browse around "aimlessly" (hello crawler bots!). Even at the user level (GROUP BY user ID, right?) you are still missing part of the picture - for example which of your "click & buy" campaigns lead users to making a purchase? Are there landing pages that work better than others? etc...
 
-Which means that aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours.
+*Enters "the session"*
 
+
+### Oh, but there's more than one definition
+
+A "session" is a is a much (ab)used term. This post looks at sessions from a behavioural perspective: A user performing a task or going through a flow in your product (in our example - users buying products). Intuitively I think we all get it, but the definition becomes harder when you mix in the other definitions of a "session":
+
+- Most frontend tracking tools come with their own baked-in definition. This can be as random as "30 minute timeout", or the new "cookie lives for 7 days" rule
+
+- Your backend might have it's own idea about a session, in our 4-day the cart expires on the backend (but we haven't implemented these events yet)
+
+- And of course, these two (front/backend) might not be on good speaking terms: your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token
+
+### Session fencing
+
+In most cases I've seen, it's easier to define when a session ends than when a session starts. Logins are not really a thing for most of us (unless you're working on a banking app, which will kick you out in the name of security) and multi-tab browsing makes it event more complicated to figure out when users begin a process. On the other hand, some events in our systems are "absolute" indicators of session end (think "check confirmation", "flow completed" etc) or come from the system side (your shopping cart is cleared after X days).
+
+Think about it this way: aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours. We recognise the fact that we are looking at a "messy" stream of data - forgotten tabs, users wandering about, different systems sending different signals etc. What we want is to find strong indication of sessions ending (a "fence"), end in between those endings we have the "behavioural session".
+
+## Example
+
+In this example I will demonstrate a mix of two of these "fences":
+
+- Backend confirms end of transaction ('Approved')
+- Frontend time-out: Our cart is "abandoned" after a few days of inactivity
+
+We observe the following behaviours in our data:
 
 - User 1 started on a browser with 2 open tabs, added 2 products (A/B), and then completed the activity on a tablet app that evening.
 - The same user also added a product to cart immediately after checkout, but resumed shopping 5 days later (so the cart expired in between)
 - User 2 added one product B to the cart and after forgetting about it for a few days tried again (the tab remained opened but the cart expired). The tracking cookie expired in between the events
 - Our backend event that track approval of a checkout do not have the token, only the user ID.
 
+We generate some data to reflect these behaviours:
 
 ```sql
 SELECT *
@@ -71,7 +93,7 @@ SELECT * FROM events_table
 | 2021-01-06 21:34:08 | uuid001 | A3    |  PageView D   |
 
 
-There's no need to actually sort the data by user & date, but it would help our visualization:
+There's no need to actually sort the data by user & date, but it would help our visualisation:
 
 ```sql
 SELECT * FROM events_table ORDER BY user_id, timestamp_utc
@@ -99,8 +121,7 @@ SELECT * FROM events_table ORDER BY user_id, timestamp_utc
 | 2021-01-06 21:35:47 | uuid002 | A2    | Checkout      |
 
 
-
-Rather than defining when a session starts it is easier to define when a session ends. This happens when a checkout is complete or
+Let's flag our "fences" - when a checkout is complete or when the cart is older than 4 days:
 
 ```sql
 SELECT

@@ -13,24 +13,25 @@ Counting tokens & clicks is great place to start (and quite often, all you reall
 
 A "session" is a is a much (ab)used term. This post looks at sessions from a behavioural perspective: A user performing a task or going through a flow in your product (in our example - users buying products). Intuitively I think we all get it, but the definition becomes harder when you mix in the other definitions of a "session":
 
-- Most frontend tracking tools come with their own baked-in definition. This can be as random as "30 minute timeout", or the new "cookie lives for 7 days" rule
+- Most frontend tracking tools come with their own baked-in definition. This can be as random as "30 minute timeout"/"cookie lives for 7 days" rule, or (hopefully) has a bit more thought behind it. These sessions can be a good place to start but, but you may discover that they are very sensitive to the definitions. Consider the long tail of users that take their time deciding: under the "30 min" rule they might generate hundreds / thousands of "no-click" sessions (instead of one long successful one) that will play havoc with your conversion rates.
 
-- Your backend might have it's own idea about a session, in our 4-day the cart expires on the backend (but we haven't implemented these events yet)
+- Your backend might have it's own idea about what a session means. In our case, we don't guarantee the prices in the cart for more than 4 days, and we decided that the cart will simply expire. Oh, and because we're low on resources we but we haven't implemented these events yet (so all you have is a time limit)
 
-- And of course, these two (front/backend) might not be on good speaking terms: your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token
+- Of course, these two (front/backend) might not be on good speaking terms: your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token, and the frontend will not fire a paveView or a new event when the cart expires.
+
 
 ### Session fencing
 
-In most cases I've seen, it's easier to define when a session ends than when a session starts. Logins are not really a thing for most of us (unless you're working on a banking app, which will kick you out in the name of security) and multi-tab browsing makes it event more complicated to figure out when users begin a process. On the other hand, some events in our systems are "absolute" indicators of session end (think "check confirmation", "flow completed" etc) or come from the system side (your shopping cart is cleared after X days).
+So what we're dealing here is a mixed stream of events from different sources, combined with some time limits we have to apply. In my experience, it's usually easier to define when a session ends than when a session starts in these circumstances. Daily logins are no longer a thing for most of us (unless you're working on a banking app, which will kick you out in the name of security) and multi-tab browsing makes it event more complicated to figure out when users begin a process. On the other hand, some events in our systems are "absolute" indicators of session end (think "check confirmation", "flow completed" etc) or come from the backend side (your shopping cart is cleared after X days).
 
-Think about it this way: aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours. We recognise the fact that we are looking at a "messy" stream of data - forgotten tabs, users wandering about, different systems sending different signals etc. What we want is to find strong indication of sessions ending (a "fence"), end in between those endings we have the "behavioural session".
+Think about it this way: aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours. We recognise the fact that we are looking at a "messy" stream of data - forgotten tabs, users wandering about, different systems sending different signals etc. What we want is to find strong indication of sessions ending (a "fence"), and in between those endings we have the "behavioural session".
 
 ## Example
 
 In this example I will demonstrate a mix of two of these "fences":
 
 - Backend confirms end of transaction ('Approved')
-- Frontend time-out: Our cart is "abandoned" after a few days of inactivity
+- Time-out: Our cart is "abandoned" after a few days of inactivity
 
 We observe the following behaviours in our data:
 
@@ -39,7 +40,7 @@ We observe the following behaviours in our data:
 - User 2 added one product B to the cart and after forgetting about it for a few days tried again (the tab remained opened but the cart expired). The tracking cookie expired in between the events
 - Our backend event that track approval of a checkout do not have the token, only the user ID.
 
-We generate some data to reflect these behaviours:
+We generate the data trail to reflect these behaviours:
 
 ```sql
 SELECT *

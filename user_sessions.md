@@ -11,20 +11,24 @@ Counting tokens & clicks is great place to start (and quite often, all you reall
 
 ### Oh, but there's more than one definition
 
-A "session" is a is a much (ab)used term. This post looks at sessions from a behavioural perspective: A user performing a task or going through a flow in your product (in our example - users buying products). Intuitively I think we all get it, but the definition becomes harder when you mix in the other definitions of a "session":
+A "session" is a is a much (ab)used term. This post looks at sessions from a *behavioural perspective*: A user performing a task or going through a flow in your product (in our example - users buying products). Intuitively I think we all get it, but the definition becomes harder when you mix in the other definitions of a "session":
 
-- Most frontend tracking tools come with their own baked-in definition. This can be as random as "30 minute timeout"/"cookie lives for 7 days" rule, or (hopefully) has a bit more thought behind it. These sessions can be a good place to start but, but you may discover that they are very sensitive to the definitions. Consider the long tail of users that take their time deciding: under the "30 min" rule they might generate hundreds / thousands of "no-click" sessions (instead of one long successful one) that will play havoc with your conversion rates.
+- Login sessions: This is really good data - both login and logout are "strong" indication for a beginning/end of a workflow. But unless you're working on secure app (finance / banking etc ) good luck getting those. For most of us the user stays logged in "forver", or at least until the cooking expires. 
 
-- Your backend might have it's own idea about what a session means. In our case, we don't guarantee the prices in the cart for more than 4 days, and we decided that the cart will simply expire. Oh, and because we're low on resources we but we haven't implemented these events yet (so all you have is a time limit)
+- Timeout sessions: This can be as random as "30 minute timeout"/"cookie lives for 7 days" rule. These sessions can be a good place to start but, but you may discover that they are very sensitive to the definitions. Consider the long tail of users that take their time deciding: under the "30 min" rule they might generate hundreds / thousands of "no-click" sessions (instead of one long successful one) that will play havoc with your conversion rates.
 
-- Of course, these two (front/backend) might not be on good speaking terms: your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token, and the frontend will not fire a paveView or a new event when the cart expires.
+- Event driven sessions: In an ideal world you have your workflows unambigouosly defined, synchronious events for every stage of the flow and all systems are firing to a single endpoint 100% of the time while your pet unicorn makes you the perfect espresso. In reality, well... this is what this post is for. 
+
+- Backend sessions: Your backend might have it's own idea about what a session means. In our case, we don't guarantee the prices in the cart for more than 4 days, and we decided that the cart will simply expire. Oh, and because we're low on resources we but we haven't implemented these events yet (so all you have is a time limit)
+
+- Most frontend tracking tools come with their own baked-in definition - typically timeout based, or (hopefully) with a bit more thought behind it, but without serious investment you will not be able to sync these sessions with your backend. Typically your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token, and the frontend will not fire a paveView or a new event when the cart expires.
 
 
 ### Session fencing
 
-So what we're dealing here is a mixed stream of events from different sources, combined with some time limits we have to apply. In my experience, it's usually easier to define when a session ends than when a session starts in these circumstances. Daily logins are no longer a thing for most of us (unless you're working on a banking app, which will kick you out in the name of security) and multi-tab browsing makes it event more complicated to figure out when users begin a process. On the other hand, some events in our systems are "absolute" indicators of session end (think "check confirmation", "flow completed" etc) or come from the backend side (your shopping cart is cleared after X days).
+So what we're dealing here is a mixed stream of events from different sources, combined with some time limits we have to apply. In my experience, it's usually easier to define when a session ends than when a session starts under these circumstances. Daily logins are no longer a thing for most of us (unless you're working on a banking app, which will kick you out in the name of security) and multi-tab browsing makes it event more complicated to figure out when users begin a process. On the other hand, some events in our systems are "absolute" indicators of session end ("checkout confirmation", "flow completed" etc) or come from the backend side (your shopping cart is cleared after X days).
 
-Think about it this way: aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours. We recognise the fact that we are looking at a "messy" stream of data - forgotten tabs, users wandering about, different systems sending different signals etc. What we want is to find strong indication of sessions ending (a "fence"), and in between those endings we have the "behavioural session".
+Think about it this way: aggregating event / ledger data into meaningful sessions is an exercise in fencing - not the sword kind but the kind that makes good neighbours. We recognise the fact that we are looking at a "messy" stream of data - forgotten tabs, users wandering about, different systems sending different signals etc. What we want is to find strong indication of sessions ending (a "fence"), and in between those endings we have the *"behavioural session"*.
 
 ## Example
 
@@ -72,7 +76,7 @@ The event ledger (rows come in by timestamp) looks like this:
 SELECT * FROM events_table
 ```
 
-| timestamp_utc       | user_id | token | event_type    |
+| timestamp utc       | user id | token | event type    |
 |:--------------------|:--------|:------|:--------------|
 | 2021-01-01 09:12:12 | uuid001 | A1    | pageView A    |
 | 2021-01-01 09:12:15 | uuid001 | A1    | pageView B    |
@@ -100,7 +104,7 @@ There's no need to actually sort the data by user & date, but it would help our 
 SELECT * FROM events_table ORDER BY user_id, timestamp_utc
 ```
 
-| timestamp_utc       | user_id | token | event_type    |
+| timestamp utc       | user id | token | event type    |
 |:--------------------|:--------|:------|:--------------|
 | 2021-01-01 09:12:12 | uuid001 | A1    | pageView A    |
 | 2021-01-01 09:12:15 | uuid001 | A1    | pageView B    |
@@ -152,7 +156,7 @@ FROM events_table
 | 2021-01-01 09:15:01 | uuid001 | A1    | Add product B | 0                     |
 | 2021-01-01 20:23:15 | uuid001 | B1    | Checkout      | 0                     |
 | 2021-01-01 20:23:16 | uuid001 |       | Approved      | 1                     |
-| 2021-01-01 20:25:44 | uuid001 | B1    | Add product C | 0                     |
+| 2021-01-01 20:25:44 | uuid001 | B1    | Add product C | 1                     |
 | 2021-01-06 21:25:37 | uuid001 | A3    | Add product C | 0                     |
 | 2021-01-06 21:35:47 | uuid001 | A3    | Checkout      | 0                     |
 | 2021-01-06 21:33:48 | uuid001 |       | Approved      | 1                     |
@@ -202,7 +206,7 @@ SELECT
 FROM end_of_sessions
 ```
 
-| timestamp_utc       | user_id | token | event_type    | session_end_indicator |
+| timestamp utc       | user id | token | event type    | session end indicator |
 |:--------------------|:--------|:------|:--------------|:----------------------|
 | 2021-01-01 09:12:12 | uuid001 | A1    | pageView A    | 0                     |
 | 2021-01-01 09:12:15 | uuid001 | A1    | pageView B    | 0                     |
@@ -271,7 +275,7 @@ SELECT
 FROM start_of_sessions
 ```
 
-| timestamp_utc       | user_id | token | event_type    | user_session_id       |
+| timestamp utc       | user id | token | event type    | user session id       |
 |:--------------------|:--------|:------|:--------------|:----------------------|
 | 2021-01-01 09:12:12 | uuid001 | A1    | pageView A    | 0                     |
 | 2021-01-01 09:12:15 | uuid001 | A1    | pageView B    | 0                     |
@@ -309,7 +313,7 @@ ORDER BY user_id, user_session_id
 
 And get:
 
-| user_id | user_session_id | purchase_count | checkout_attempts | distinct_pageviews_count |
+| user id | user session id | purchase count | checkout attempts | distinct pageviews count |
 |---------|-----------------|----------------|-------------------|--------------------------|
 | uid001  | 0               | 1              | 1                 | 2                        |
 | uid001  | 1               | 0              | 0                 | 0                        |

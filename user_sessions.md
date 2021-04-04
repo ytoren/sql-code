@@ -1,8 +1,8 @@
-# What's in a session
+# Defining user-sessions from events & pageViews in SQL
+
+## What's in a session
 
 Good news! Your engineers finally got around to implementing pageView tracking and maybe some custom events (buttons clicked, backend events like checkout confirmation, etc). It's time to start figuring out what your users are *actually* doing with your product.
-
-## Why sessions
 
 Counting tokens & clicks is great place to start (and quite often, all you really need), but you want to dive a bit deeper. KPIs like [total clicks] / [total product paveViews] are good overall metrics, but will not tell you that 90% of your users always click while 10% of your users just browse around "aimlessly" (hello crawler bots!). Even at the user level (GROUP BY user ID, right?) you are still missing part of the picture - for example which of your "click & buy" campaigns lead users to making a purchase? Are there landing pages that work better than others? etc...
 
@@ -13,15 +13,13 @@ Counting tokens & clicks is great place to start (and quite often, all you reall
 
 A "session" is a is a much (ab)used term. This post looks at sessions from a *behavioural perspective*: A user performing a task or going through a flow in your product (in our example - users buying products). Intuitively I think we all get it, but the definition becomes harder when you mix in the other definitions of a "session":
 
-- Login sessions: This is really good data - both login and logout are "strong" indication for a beginning/end of a workflow. But unless you're working on secure app (finance / banking etc ) good luck getting those. For most of us the user stays logged in "forver", or at least until the cooking expires. 
+- **Login sessions:** This is really good data - both login and logout are "strong" indication for a beginning/end of a workflow. But unless you're working on secure app (finance / banking etc ) good luck getting those. For most of us the user stays logged in "forver", or at least until the cooking expires.
 
-- Timeout sessions: This can be as random as "30 minute timeout"/"cookie lives for 7 days" rule. These sessions can be a good place to start but, but you may discover that they are very sensitive to the definitions. Consider the long tail of users that take their time deciding: under the "30 min" rule they might generate hundreds / thousands of "no-click" sessions (instead of one long successful one) that will play havoc with your conversion rates.
+- **Timeout sessions:** This can be as random as "30 minute timeout"/"cookie lives for 7 days" rule. These sessions can be a good place to start but, but you may discover that they are very sensitive to the definitions. Consider the long tail of users that take their time deciding: under the "30 min" rule they might generate hundreds / thousands of "no-click" sessions (instead of one long successful one) that will play havoc with your conversion rates.
 
-- Event driven sessions: In an ideal world you have your workflows unambigouosly defined, synchronious events for every stage of the flow and all systems are firing to a single endpoint 100% of the time while your pet unicorn makes you the perfect espresso. In reality, well... this is what this post is for. 
+- **Event driven sessions:** In an ideal world you have your workflows unambigouosly defined, synchronious events for every stage of the flow and all systems are firing to a single endpoint 100% of the time while your pet unicorn makes you the perfect espresso. In reality, well... this is what this post is for.
 
-- Backend sessions: Your backend might have it's own idea about what a session means. In our case, we don't guarantee the prices in the cart for more than 4 days, and we decided that the cart will simply expire. Oh, and because we're low on resources we but we haven't implemented these events yet (so all you have is a time limit)
-
-- Most frontend tracking tools come with their own baked-in definition - typically timeout based, or (hopefully) with a bit more thought behind it, but without serious investment you will not be able to sync these sessions with your backend. Typically your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token, and the frontend will not fire a paveView or a new event when the cart expires.
+- **Backend/frontend sessions:** Your backend might have it's own idea about what a session means. In our case, we don't guarantee the prices in the cart for more than 4 days, and we decided that the cart will simply expire. Oh, and because we're low on resources we but we haven't implemented these events yet (so all you have is a time limit). Most frontend tracking tools come with their own baked-in definition - typically timeout based, or (hopefully) with a bit more thought behind it, but without serious investment you will not be able to sync these sessions with your backend. Typically your backend is not aware of the tracking that's happening on the front end, meaning that backend events don't have the frontend's session token, and the frontend will not fire a paveView or a new event when the cart expires.
 
 
 ### Session fencing

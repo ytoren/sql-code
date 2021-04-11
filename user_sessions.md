@@ -321,6 +321,7 @@ And get:
 | uid002  | 1               | 1              | 1                 | 0                        |
 | uid002  | 2               | 0              | 1                 | 0                        |
 
+
 ## Full SQL code
 
-You can find the full code in [this file](user_sessions.sql)
+You can find the full code in [this file](https://github.com/ytoren/sql-code/blob/main/user_sessions.sql)

@@ -335,6 +335,11 @@ ORDER BY user_id
 ### Getting more than one value at a time (shortcuts)
 TBD
 
+
+## Full SQL code
+
+You can find the full code in [this file](https://github.com/ytoren/sql-code/blob/main/aggregation_types.sql)
+
 <!--
 ```sql
 SELECT

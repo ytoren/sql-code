@@ -1,5 +1,6 @@
 [Back to my projects page](/)
-[Back to Coding in SQL](/sql-code)
+
+  [Back to Coding in SQL](/sql-code)
 
 # Defining user-sessions from events & pageViews in SQL
 

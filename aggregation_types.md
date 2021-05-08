@@ -1,5 +1,6 @@
 [Back to my projects page](/)
-[Back to Coding in SQL](/sql-code/)
+
+  [Back to Coding in SQL](/sql-code/)
 
 # Aggregating data in SQL, or how to make counting even harder
 

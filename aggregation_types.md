@@ -1,3 +1,6 @@
+[Back to my projects page](/)
+[Back to Coding in SQL](/sql-code/)
+
 # Aggregating data in SQL, or how to make counting even harder
 
 They say that counting stuff is hard, especially when you want to count very different things at the same time. In this post I'll review a few methods for extracting aggregations simultaneously by combining simple counts sums and counts to more distinct, order-related aggregations.  Practically every aggregation discussed below can be achieved, on it's own, with much simpler queries (and I will show some examples below). If all you need is to extract a single number at a time you should definitely opt for simpler syntax. But the challenge I set in this post is to achieve all these sums & counts with in a single query - this is often more efficient and definitely simpler to write & maintain.   

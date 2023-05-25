@@ -2,7 +2,7 @@
 
 [Back to Coding in SQL](/sql-code)
 
-# WIP: Kernel smoothing in SQL: temporal, cicular and other beasts
+# Circular kernel smoothing in SQL
 
 ## Smoothing things over (simple case)
 

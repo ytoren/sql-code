@@ -7,4 +7,7 @@ There are a lot of things that SQL is not: not very readable, not very concise o
 This project collects different examples of writing programming logic in SQL for fun & profit:
 
 - [Defining user-sessions from events & pageviews in SQL](user_sessions.md)
+
 - [Aggregating data in SQL: Let's make counting harder!](aggregation_types.md)
+
+- [Circular kernel smoothing in SQL](kernel_smoothing.md)
